@@ -1,4 +1,4 @@
-# metaplastic.py
+# meta_plastic_probing.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
