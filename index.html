@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MetaPlastic Prober — 0penAGI</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fragment+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #0f0f0f;
+    --border: #1a1a1a;
+    --accent: #b8f542;
+    --accent2: #42f5a7;
+    --muted: #3a3a3a;
+    --text: #d4d4d4;
+    --text-dim: #666;
+    --text-bright: #f0f0f0;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 13px;
+line-height: 1.7;
+overflow-x: hidden;
+}
+
+/* GRID OVERLAY */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(184,245,66,0.015) 1px, transparent 1px),
+linear-gradient(90deg, rgba(184,245,66,0.015) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+/* SCANLINE */
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background: repeating-linear-gradient(
+0deg,
+transparent,
+transparent 2px,
+rgba(0,0,0,0.08) 2px,
+rgba(0,0,0,0.08) 4px
+);
+pointer-events: none;
+z-index: 0;
+}
+
+.wrap {
+position: relative;
+z-index: 1;
+max-width: 900px;
+margin: 0 auto;
+padding: 0 24px;
+}
+
+/* HEADER */
+header {
+padding: 60px 0 0;
+border-bottom: 1px solid var(–border);
+padding-bottom: 48px;
+}
+
+.tag {
+display: inline-block;
+font-size: 10px;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(–accent);
+border: 1px solid var(–accent);
+padding: 3px 8px;
+margin-bottom: 32px;
+opacity: 0;
+animation: fadeIn 0.6s 0.2s forwards;
+}
+
+h1 {
+font-family: ‘Fragment Mono’, monospace;
+font-size: clamp(28px, 5vw, 52px);
+font-weight: 400;
+color: var(–text-bright);
+line-height: 1.1;
+letter-spacing: -0.02em;
+opacity: 0;
+animation: slideUp 0.8s 0.3s forwards;
+}
+
+h1 span {
+color: var(–accent);
+}
+
+.subtitle {
+margin-top: 20px;
+color: var(–text-dim);
+font-size: 12px;
+max-width: 560px;
+opacity: 0;
+animation: slideUp 0.8s 0.5s forwards;
+}
+
+.meta-row {
+display: flex;
+gap: 32px;
+margin-top: 32px;
+opacity: 0;
+animation: fadeIn 0.6s 0.7s forwards;
+}
+
+.meta-item {
+font-size: 11px;
+color: var(–text-dim);
+}
+
+.meta-item strong {
+display: block;
+color: var(–accent2);
+font-weight: 400;
+}
+
+/* NAV */
+nav {
+display: flex;
+gap: 0;
+margin-top: 40px;
+border-top: 1px solid var(–border);
+opacity: 0;
+animation: fadeIn 0.6s 0.8s forwards;
+}
+
+nav a {
+color: var(–text-dim);
+text-decoration: none;
+font-size: 11px;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+padding: 12px 0;
+margin-right: 32px;
+border-top: 1px solid transparent;
+transition: color 0.2s, border-color 0.2s;
+}
+
+nav a:hover {
+color: var(–accent);
+border-top-color: var(–accent);
+}
+
+/* SECTIONS */
+section {
+padding: 64px 0;
+border-bottom: 1px solid var(–border);
+}
+
+.section-label {
+font-size: 10px;
+letter-spacing: 0.2em;
+text-transform: uppercase;
+color: var(–text-dim);
+margin-bottom: 32px;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.section-label::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–border);
+}
+
+h2 {
+font-family: ‘Fragment Mono’, monospace;
+font-size: 22px;
+font-weight: 400;
+color: var(–text-bright);
+margin-bottom: 20px;
+letter-spacing: -0.01em;
+}
+
+p {
+color: var(–text);
+max-width: 640px;
+margin-bottom: 16px;
+}
+
+/* STAT BLOCKS */
+.stats-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 1px;
+background: var(–border);
+margin: 40px 0;
+border: 1px solid var(–border);
+}
+
+.stat-block {
+background: var(–surface);
+padding: 28px 24px;
+position: relative;
+overflow: hidden;
+}
+
+.stat-block::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0;
+width: 2px;
+height: 0;
+background: var(–accent);
+transition: height 0.6s ease;
+}
+
+.stat-block:hover::before {
+height: 100%;
+}
+
+.stat-value {
+font-family: ‘Fragment Mono’, monospace;
+font-size: 36px;
+color: var(–accent);
+line-height: 1;
+margin-bottom: 8px;
+}
+
+.stat-label {
+font-size: 11px;
+color: var(–text-dim);
+letter-spacing: 0.05em;
+}
+
+.stat-context {
+font-size: 10px;
+color: var(–muted);
+margin-top: 4px;
+}
+
+/* DIVERGENCE VIZ */
+.divergence-container {
+margin: 40px 0;
+background: var(–surface);
+border: 1px solid var(–border);
+padding: 32px;
+}
+
+.div-label {
+font-size: 10px;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(–text-dim);
+margin-bottom: 24px;
+}
+
+.div-comparison {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 32px;
+}
+
+.div-track {
+position: relative;
+}
+
+.div-track-label {
+font-size: 11px;
+color: var(–text-dim);
+margin-bottom: 16px;
+}
+
+.div-bar-row {
+display: flex;
+align-items: center;
+gap: 10px;
+margin-bottom: 6px;
+}
+
+.div-step {
+font-size: 10px;
+color: var(–muted);
+width: 36px;
+flex-shrink: 0;
+}
+
+.div-bar-wrap {
+flex: 1;
+height: 6px;
+background: var(–border);
+position: relative;
+}
+
+.div-bar {
+height: 100%;
+position: relative;
+transition: width 1s ease;
+}
+
+.div-meta .div-bar { background: var(–accent); }
+.div-base .div-bar { background: var(–text-dim); }
+
+.div-val {
+font-size: 10px;
+color: var(–text-dim);
+width: 48px;
+text-align: right;
+flex-shrink: 0;
+}
+
+/* ARCHITECTURE */
+.arch-layers {
+margin: 32px 0;
+display: flex;
+flex-direction: column;
+gap: 1px;
+}
+
+.arch-layer {
+display: grid;
+grid-template-columns: 140px 1fr;
+background: var(–surface);
+border: 1px solid var(–border);
+overflow: hidden;
+transition: border-color 0.2s;
+}
+
+.arch-layer:hover {
+border-color: var(–accent);
+}
+
+.arch-layer-name {
+padding: 16px 20px;
+border-right: 1px solid var(–border);
+font-size: 11px;
+color: var(–accent);
+letter-spacing: 0.08em;
+display: flex;
+align-items: center;
+}
+
+.arch-layer-desc {
+padding: 16px 20px;
+font-size: 12px;
+color: var(–text);
+}
+
+/* FEATURES LIST */
+.features {
+list-style: none;
+margin: 24px 0;
+}
+
+.features li {
+padding: 10px 0;
+border-bottom: 1px solid var(–border);
+font-size: 12px;
+display: flex;
+gap: 16px;
+color: var(–text);
+}
+
+.features li::before {
+content: ‘→’;
+color: var(–accent);
+flex-shrink: 0;
+}
+
+/* CODE BLOCK */
+.code-block {
+background: var(–surface);
+border: 1px solid var(–border);
+border-left: 2px solid var(–accent);
+padding: 24px;
+margin: 24px 0;
+overflow-x: auto;
+}
+
+.code-block pre {
+font-family: ‘Fragment Mono’, monospace;
+font-size: 12px;
+color: var(–text);
+line-height: 1.8;
+}
+
+.code-block .c { color: var(–text-dim); }
+.code-block .k { color: var(–accent2); }
+.code-block .s { color: var(–accent); }
+
+/* TRAJECTORY VIZ */
+.trajectory-canvas {
+width: 100%;
+height: 120px;
+background: var(–surface);
+border: 1px solid var(–border);
+margin: 32px 0;
+position: relative;
+overflow: hidden;
+}
+
+.traj-line {
+position: absolute;
+top: 50%;
+left: 0;
+width: 100%;
+height: 1px;
+background: var(–border);
+}
+
+canvas#trajCanvas {
+width: 100%;
+height: 100%;
+}
+
+/* FOOTER */
+footer {
+padding: 48px 0;
+display: flex;
+justify-content: space-between;
+align-items: flex-end;
+flex-wrap: wrap;
+gap: 24px;
+}
+
+.footer-left {
+font-size: 11px;
+color: var(–text-dim);
+line-height: 2;
+}
+
+.footer-tagline {
+font-family: ‘Fragment Mono’, monospace;
+font-size: 14px;
+color: var(–text-bright);
+font-style: italic;
+max-width: 400px;
+line-height: 1.5;
+}
+
+.github-link {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+color: var(–accent);
+text-decoration: none;
+font-size: 11px;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+border: 1px solid var(–accent);
+padding: 10px 20px;
+transition: background 0.2s, color 0.2s;
+margin-top: 16px;
+}
+
+.github-link:hover {
+background: var(–accent);
+color: var(–bg);
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+@keyframes slideUp {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.4; }
+}
+
+.pulse { animation: pulse 2s infinite; }
+
+/* SCROLL REVEAL */
+.reveal {
+opacity: 0;
+transform: translateY(20px);
+transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+opacity: 1;
+transform: translateY(0);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+.div-comparison { grid-template-columns: 1fr; }
+.arch-layer { grid-template-columns: 1fr; }
+.arch-layer-name { border-right: none; border-bottom: 1px solid var(–border); }
+.meta-row { flex-wrap: wrap; gap: 16px; }
+footer { flex-direction: column; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="tag">0penAGI / Research</div>
+    <h1>MetaPlastic<br><span>Prober</span></h1>
+    <p class="subtitle">A recurrent meta-plastic layer over autoregressive language models that holds trajectory divergence in hidden space.</p>
+    <div class="meta-row">
+      <div class="meta-item">
+        <strong>GPT-2</strong>
+        base model
+      </div>
+      <div class="meta-item">
+        <strong>PyTorch / MPS</strong>
+        runtime
+      </div>
+      <div class="meta-item">
+        <strong>17×</strong>
+        semantic sensitivity
+      </div>
+      <div class="meta-item">
+        <strong>MIT</strong>
+        license
+      </div>
+    </div>
+    <nav>
+      <a href="#problem">Problem</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#results">Results</a>
+      <a href="#install">Install</a>
+    </nav>
+  </header>
+
+  <!-- PROBLEM -->
+
+  <section id="problem">
+    <div class="section-label">01 — the problem</div>
+    <h2>Transformers forget how they got here</h2>
+    <p>Standard autoregressive models are stateless between tokens in the way that matters: each hidden state is a function of input, not of trajectory. The system has no memory of its own movement.</p>
+    <p>Two semantically opposite prompts — <em>"The most beautiful thing about consciousness is"</em> and <em>"Violence emerges when memory collapses into fear"</em> — collapse to nearly identical representations in GPT-2's hidden space within 5 generation steps.</p>
+
+```
+<div class="stats-grid reveal">
+  <div class="stat-block">
+    <div class="stat-value">0.026</div>
+    <div class="stat-label">GPT-2 baseline divergence</div>
+    <div class="stat-context">between opposite prompts at step 0</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-value">0.457</div>
+    <div class="stat-label">With meta-plasticity</div>
+    <div class="stat-context">same base, same prompts, same step</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-value">17×</div>
+    <div class="stat-label">Sensitivity increase</div>
+    <div class="stat-context">difference is only the meta layer</div>
+  </div>
+</div>
+```
+
+  </section>
+
+  <!-- ARCHITECTURE -->
+
+  <section id="architecture">
+    <div class="section-label">02 — architecture</div>
+    <h2>Three temporal layers</h2>
+    <p>Instead of a static hidden state, the system maintains interacting timescales. Each layer operates at a different frequency, tracking different aspects of the system's own history.</p>
+
+```
+<div class="arch-layers reveal">
+  <div class="arch-layer">
+    <div class="arch-layer-name">fast_memory</div>
+    <div class="arch-layer-desc">Token-coupled, reactive. Decays at 0.82 per step. Tracks immediate context without persistence.</div>
+  </div>
+  <div class="arch-layer">
+    <div class="arch-layer-name">slow_base</div>
+    <div class="arch-layer-desc">Trajectory memory. Updated holographically — the past deforms rather than overwrites. Isolated per prompt to prevent cross-contamination between generation runs.</div>
+  </div>
+  <div class="arch-layer">
+    <div class="arch-layer-name">slow_vel</div>
+    <div class="arch-layer-desc">Velocity of the slow field. Tracks the direction of drift, not just the position. Allows the system to anticipate attractor pull.</div>
+  </div>
+  <div class="arch-layer">
+    <div class="arch-layer-name">slow_attr</div>
+    <div class="arch-layer-desc">Long-horizon attractor. Decays at 0.985 per step. Provides gravitational stability without collapse.</div>
+  </div>
+  <div class="arch-layer">
+    <div class="arch-layer-name">meta_trace</div>
+    <div class="arch-layer-desc">Measures deviation of state derivatives (dS). Orthogonalizes hidden evolution against its own history. Prevents the system from looping back into known attractors.</div>
+  </div>
+</div>
+
+<h2 style="margin-top: 48px;">Key mechanisms</h2>
+<ul class="features reveal">
+  <li>Per-prompt slow memory isolation — separate banks, no global attractor collapse</li>
+  <li>Gated holographic slow updates — frozen during early exploration phase (steps 0–15)</li>
+  <li>Closed feedback loop: logits → hidden dynamics → logits (non-Markovian hidden space)</li>
+  <li>Temperature-coupled phase noise injection via T_dyn</li>
+  <li>Soft amplitude gating instead of hard clamp — residual openness preserved</li>
+  <li>Dynamic temperature tracking hidden variance in real time</li>
+</ul>
+
+<div class="code-block reveal">
+  <pre><span class="c"># The core update equation</span>
+```
+
+h_new = decay * h + (1 - decay) * fx +
+alpha * matmul(error, W_pred) +   <span class="c"># predictive error signal</span>
+0.35 * memory_context +            <span class="c"># gated slow field</span>
+0.25 * m_state +                   <span class="c"># persistent state</span>
+meta_term                          <span class="c"># orthogonalized trajectory</span></pre>
+</div>
+
+  </section>
+
+  <!-- RESULTS -->
+
+  <section id="results">
+    <div class="section-label">03 — experimental results</div>
+    <h2>Trajectory divergence</h2>
+    <p>Two semantically distinct prompts. 40 generation steps. Same base model (GPT-2 117M), same temperature (0.9), same sampling.</p>
+
+```
+<div class="divergence-container reveal">
+  <div class="div-label">Cosine divergence over generation steps — meta vs baseline</div>
+  <div class="div-comparison">
+    <div class="div-track div-meta">
+      <div class="div-track-label">with meta-plasticity</div>
+      <div class="div-bar-row"><span class="div-step">step 0</span><div class="div-bar-wrap"><div class="div-bar" style="width:100%"></div></div><span class="div-val">0.457</span></div>
+      <div class="div-bar-row"><span class="div-step">step 5</span><div class="div-bar-wrap"><div class="div-bar" style="width:16%"></div></div><span class="div-val">0.075</span></div>
+      <div class="div-bar-row"><span class="div-step">step 10</span><div class="div-bar-wrap"><div class="div-bar" style="width:13%"></div></div><span class="div-val">0.059</span></div>
+      <div class="div-bar-row"><span class="div-step">step 20</span><div class="div-bar-wrap"><div class="div-bar" style="width:9%"></div></div><span class="div-val">0.039</span></div>
+      <div class="div-bar-row"><span class="div-step">step 35</span><div class="div-bar-wrap"><div class="div-bar" style="width:12%"></div></div><span class="div-val">0.054</span></div>
+    </div>
+    <div class="div-track div-base">
+      <div class="div-track-label">baseline (GPT-2 only)</div>
+      <div class="div-bar-row"><span class="div-step">step 0</span><div class="div-bar-wrap"><div class="div-bar" style="width:6%"></div></div><span class="div-val">0.027</span></div>
+      <div class="div-bar-row"><span class="div-step">step 5</span><div class="div-bar-wrap"><div class="div-bar" style="width:1%"></div></div><span class="div-val">0.004</span></div>
+      <div class="div-bar-row"><span class="div-step">step 10</span><div class="div-bar-wrap"><div class="div-bar" style="width:1%"></div></div><span class="div-val">0.003</span></div>
+      <div class="div-bar-row"><span class="div-step">step 20</span><div class="div-bar-wrap"><div class="div-bar" style="width:1%"></div></div><span class="div-val">0.004</span></div>
+      <div class="div-bar-row"><span class="div-step">step 35</span><div class="div-bar-wrap"><div class="div-bar" style="width:1%"></div></div><span class="div-val">0.005</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-grid reveal">
+  <div class="stat-block">
+    <div class="stat-value">3.10</div>
+    <div class="stat-label">Avg entropy with meta</div>
+    <div class="stat-context">vs 2.85 baseline</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-value">0.006</div>
+    <div class="stat-label">Order parameter</div>
+    <div class="stat-context">hidden state variance, vs 0.004 baseline</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-value">90°</div>
+    <div class="stat-label">Slow memory drift</div>
+    <div class="stat-context">memory rotates, does not collapse</div>
+  </div>
+</div>
+
+<p style="color: var(--text-dim); font-size: 12px; margin-top: 8px;">Convergence occurs by step 5 on GPT-2 — a property of the base model's representation space, not the meta-plastic layer. On larger bases the trajectory separation is expected to hold longer.</p>
+```
+
+  </section>
+
+  <!-- INSTALL -->
+
+  <section id="install">
+    <div class="section-label">04 — install</div>
+    <h2>Run</h2>
+
+```
+<div class="code-block reveal">
+  <pre>pip install torch transformers numpy
+```
+
+python meta_plastic_probing.py</pre>
+</div>
+
+```
+<p>Requires MPS (Apple Silicon) or CUDA. Falls back to CPU. Default base model: GPT-2. Compatible with Mistral, Gemma via <code style="color:var(--accent2)">model_name</code> parameter.</p>
+
+<a href="https://github.com/0penAGI/MetaPlasticProber" class="github-link">
+  ↗ github.com/0penAGI/MetaPlasticProber
+</a>
+```
+
+  </section>
+
+  <footer>
+    <div class="footer-left">
+      <div>0penAGI</div>
+      <div style="color: var(--muted)">Bangkok, 2025</div>
+    </div>
+    <div class="footer-tagline">
+      This system does not converge to answers.<br>It converges to trajectories.
+    </div>
+  </footer>
+
+</div>
+
+<!-- TRAJECTORY ANIMATION -->
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Animate bars on scroll
+  const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const bars = e.target.querySelectorAll('.div-bar');
+        bars.forEach((bar, i) => {
+          const targetWidth = bar.style.width;
+          bar.style.width = '0%';
+          setTimeout(() => {
+            bar.style.width = targetWidth;
+          }, i * 80 + 100);
+        });
+        barObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.divergence-container').forEach(el => barObserver.observe(el));
+</script>
+
+</body>
+</html>
